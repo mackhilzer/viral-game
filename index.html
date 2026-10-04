@@ -40,6 +40,23 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
+        .winner-banner {
+            display: none;
+            margin: 15px auto 0;
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffeb3b;
+            background: rgba(0, 0, 0, 0.25);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 12px 18px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .winner-banner.visible {
+            display: inline-block;
+        }
+
         .game-area {
             margin: 30px 0;
         }
@@ -160,7 +177,9 @@
     <div class="container">
         <h1>🎮 TAP FRENZY 🎮</h1>
         <p style="margin-bottom: 20px; font-size: 1.1em;">How many taps can you do?</p>
-        
+
+        <div id="winnerBanner" class="winner-banner">YOU ARE THE WINNER!</div>
+
         <div class="game-area">
             <div class="score-display" id="score">0</div>
             <button class="tap-button" id="tapBtn">👆</button>
@@ -208,17 +227,17 @@
         const shareBtn = document.getElementById('shareBtn');
         const timerDisplay = document.getElementById('timer');
         const tpsDisplay = document.getElementById('tps');
+        const winnerBanner = document.getElementById('winnerBanner');
 
         bestScoreDisplay.textContent = bestScore;
 
-        tapBtn.addEventListener('click', () => {
+        tapBtn.addEventListener('click', (event) => {
             if (!gameActive) return;
 
             score++;
             tapsInLastSecond++;
             scoreDisplay.textContent = score;
 
-            // Floating text effect
             const floatingText = document.createElement('div');
             floatingText.className = 'floating-text';
             floatingText.textContent = '+1';
@@ -234,6 +253,7 @@
         shareBtn.addEventListener('click', shareScore);
 
         function startGame() {
+            winnerBanner.classList.remove('visible');
             score = 0;
             timeLeft = 30;
             gameActive = true;
@@ -246,13 +266,11 @@
 
             gameStartTime = Date.now();
 
-            // Update TPS every second
             const tpsInterval = setInterval(() => {
                 tpsDisplay.textContent = tapsInLastSecond;
                 tapsInLastSecond = 0;
             }, 1000);
 
-            // Game timer
             const timerInterval = setInterval(() => {
                 timeLeft--;
                 timerDisplay.textContent = timeLeft;
@@ -275,13 +293,17 @@
                 bestScore = score;
                 localStorage.setItem('bestScore', bestScore);
                 bestScoreDisplay.textContent = bestScore;
-                alert('🎉 NEW BEST SCORE! 🎉\n\n' + score + ' taps!');
+                winnerBanner.textContent = 'YOU ARE THE WINNER!';
+                winnerBanner.classList.add('visible');
+                alert('YOU ARE THE WINNER! 🎉\n\n' + score + ' taps!');
             } else {
+                winnerBanner.classList.remove('visible');
                 alert('Game Over!\n\nYour Score: ' + score + '\nBest Score: ' + bestScore);
             }
         }
 
         function resetGame() {
+            winnerBanner.classList.remove('visible');
             score = 0;
             timeLeft = 30;
             gameActive = false;
@@ -296,14 +318,13 @@
 
         function shareScore() {
             const text = `🎮 I got ${bestScore} taps in Tap Frenzy! Can you beat my score? 🏆\n\nPlay now: https://github.com/mackhilzer/viral-game`;
-            
+
             if (navigator.share) {
                 navigator.share({
                     title: 'Tap Frenzy',
                     text: text
                 });
             } else {
-                // Fallback: copy to clipboard
                 navigator.clipboard.writeText(text);
                 alert('Score copied to clipboard! Share it with your friends.');
             }

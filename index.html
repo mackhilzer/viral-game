@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap Frenzy - The Viral Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-area {
+            margin: 30px 0;
+        }
+
+        .tap-button {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border: 4px solid #fff;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            font-weight: bold;
+        }
+
+        .tap-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .tap-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .stats {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .floating-text {
+            position: fixed;
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffeb3b;
+            pointer-events: none;
+            animation: float-up 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px);
+            }
+        }
+
+        .share-section {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .share-section p {
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 TAP FRENZY 🎮</h1>
+        <p style="margin-bottom: 20px; font-size: 1.1em;">How many taps can you do?</p>
+        
+        <div class="game-area">
+            <div class="score-display" id="score">0</div>
+            <button class="tap-button" id="tapBtn">👆</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Taps Per Second</div>
+                <div class="stat-value" id="tps">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Best Score</div>
+                <div class="stat-value" id="bestScore">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Time (sec)</div>
+                <div class="stat-value" id="timer">30</div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="startBtn">▶️ Start Game (30s)</button>
+            <button id="resetBtn">🔄 Reset</button>
+        </div>
+
+        <div class="share-section">
+            <p>📱 Share your score and challenge your friends!</p>
+            <button id="shareBtn">📤 Share Score</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let bestScore = localStorage.getItem('bestScore') || 0;
+        let gameActive = false;
+        let timeLeft = 30;
+        let gameStartTime = 0;
+        let tapsInLastSecond = 0;
+
+        const scoreDisplay = document.getElementById('score');
+        const bestScoreDisplay = document.getElementById('bestScore');
+        const tapBtn = document.getElementById('tapBtn');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const timerDisplay = document.getElementById('timer');
+        const tpsDisplay = document.getElementById('tps');
+
+        bestScoreDisplay.textContent = bestScore;
+
+        tapBtn.addEventListener('click', () => {
+            if (!gameActive) return;
+
+            score++;
+            tapsInLastSecond++;
+            scoreDisplay.textContent = score;
+
+            // Floating text effect
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-text';
+            floatingText.textContent = '+1';
+            floatingText.style.left = event.clientX + 'px';
+            floatingText.style.top = event.clientY + 'px';
+            document.body.appendChild(floatingText);
+
+            setTimeout(() => floatingText.remove(), 1000);
+        });
+
+        startBtn.addEventListener('click', startGame);
+        resetBtn.addEventListener('click', resetGame);
+        shareBtn.addEventListener('click', shareScore);
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            gameActive = true;
+            tapsInLastSecond = 0;
+            scoreDisplay.textContent = '0';
+            timerDisplay.textContent = '30';
+            startBtn.disabled = true;
+            tapBtn.style.opacity = '1';
+            tapBtn.style.pointerEvents = 'auto';
+
+            gameStartTime = Date.now();
+
+            // Update TPS every second
+            const tpsInterval = setInterval(() => {
+                tpsDisplay.textContent = tapsInLastSecond;
+                tapsInLastSecond = 0;
+            }, 1000);
+
+            // Game timer
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    clearInterval(tpsInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            startBtn.disabled = false;
+            tapBtn.style.opacity = '0.5';
+            tapBtn.style.pointerEvents = 'none';
+
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('bestScore', bestScore);
+                bestScoreDisplay.textContent = bestScore;
+                alert('🎉 NEW BEST SCORE! 🎉\n\n' + score + ' taps!');
+            } else {
+                alert('Game Over!\n\nYour Score: ' + score + '\nBest Score: ' + bestScore);
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            timeLeft = 30;
+            gameActive = false;
+            tapsInLastSecond = 0;
+            scoreDisplay.textContent = '0';
+            timerDisplay.textContent = '30';
+            tpsDisplay.textContent = '0';
+            startBtn.disabled = false;
+            tapBtn.style.opacity = '1';
+            tapBtn.style.pointerEvents = 'auto';
+        }
+
+        function shareScore() {
+            const text = `🎮 I got ${bestScore} taps in Tap Frenzy! Can you beat my score? 🏆\n\nPlay now: https://github.com/mackhilzer/viral-game`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Tap Frenzy',
+                    text: text
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(text);
+                alert('Score copied to clipboard! Share it with your friends.');
+            }
+        }
+    </script>
+</body>
+</html>
